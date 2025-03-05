@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+    spec:
+      containers:
+      {{ include "postgres" . | indent 6 }}
+      volumes:
+      - name: gogs-data
+        persistentVolumeClaim:
+         claimName: {{ .Values.persistence.existingGogsClaim | default (include "fullname" .) }}
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingPostgresClaim | default (include "postgresql.fullname" .) }}
+      - name: gogs-config
+        configMap:
+          name: {{ template "fullname" . }}
